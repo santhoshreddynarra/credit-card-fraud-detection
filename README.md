@@ -1,223 +1,264 @@
-# Credit Card Fraud Detection System
+# FraudShield — Credit Card Fraud Detection Platform
 
-A production-style end-to-end Machine Learning platform for real-time Credit Card Fraud Detection built with **Python (Flask + XGBoost)**, **Node.js (Express + MongoDB)**, and **React (Vite + Tailwind CSS + Recharts)**.
-
----
-
-## 📌 Project Overview
-
-Credit card fraud detection is a critical financial security application where fraudulent transactions represent a minute fraction of total transactions. This platform provides an end-to-end cloud architecture to evaluate live transaction feature inputs through a trained **XGBoost machine learning model**, store audit logs in **MongoDB**, and present dynamic risk analytics on a modern **React dashboard**.
+A production-style, end-to-end fintech security web application for real-time Credit Card Fraud Risk Analysis built with **Python (Flask + XGBoost)**, **Node.js (Express + MongoDB Atlas)**, and **React (Vite + Tailwind CSS + Recharts)**.
 
 ---
 
-## ✨ Features
+## 1. Project Overview
 
-- **Real-Time Fraud Inference**: Immediate risk classification (`NORMAL` vs `FRAUD DETECTED`) and precise fraud probability percentages.
-- **Automated Feature Preprocessing**: `StandardScaler` normalization applied to transaction `Time` and `Amount` matching exact ML training specifications.
-- **Dynamic Risk Analytics**: Recharts visualizations displaying class distributions and transaction proportion breakdowns.
-- **Historical Audit Logs**: Persistent MongoDB logging of predictions, timestamps, and full feature payloads.
-- **Preset Test Controls**: Pre-configured sample transactions for 1-click verification of legitimate and fraudulent scenarios.
-- **Resilient Multi-Service Architecture**: Independent microservices with centralized error handling and health probes.
+**FraudShield** is a commercial-grade fraud monitoring platform designed to evaluate financial transaction risk in real time. Rather than operating as a simple demo or Jupyter notebook script, FraudShield implements a decoupled microservice architecture: a **Python Flask inference service** hosts the trained machine learning model, a **Node.js / Express API gateway** handles user authentication and audit persistence in **MongoDB Atlas**, and a **React single-page application** provides an enterprise dashboard interface.
 
 ---
 
-## 🏗️ System Architecture
+## 2. Problem Statement
+
+Financial fraud detection presents unique engineering and machine learning challenges:
+- **Severe Class Imbalance**: In real-world credit card datasets, fraudulent transactions represent less than 0.2% of total volume (492 fraud cases out of 284,807 transactions).
+- **Latency & Reliability**: Risk scoring must be executed within milliseconds without impacting checkout user experience.
+- **Data Isolation & Security**: Prediction history, financial telemetry, and user credentials must be protected through secure authentication and tenant-level data isolation.
+
+---
+
+## 3. Key Features
+
+- **Decoupled ML Inference**: High-speed XGBoost prediction microservice decoupled from the web application API gateway.
+- **Production Authentication**: Secure user sign-up (`/register`), login (`/login`), and session persistence using `bcryptjs` password hashing and `JWT` tokens.
+- **Strict User Data Isolation**: Prediction history and aggregate statistics are strictly isolated by authenticated `userId` extracted from server-validated JWT tokens.
+- **User-Friendly Transaction Form**: Prominently features primary transaction attributes (**Amount**, **Elapsed Time**) with a collapsible section for 28 PCA feature inputs (`V1`–`V28`). Includes pre-validated demo sample presets.
+- **Clear Risk Scoring UI**: Displays risk status (`Potential Fraud Detected` vs `Transaction Appears Legitimate`), risk level badges (`High`, `Medium`, `Low`), exact fraud probability percentages, and a clear model disclaimer accordion.
+- **Searchable Prediction History**: User-isolated history log with live search, result filters (`All`, `Fraud`, `Legitimate`), risk sorting (`Highest Risk`, `Lowest Risk`, `Newest`, `Oldest`), and an interactive 30-feature inspection modal.
+
+---
+
+## 4. System Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│               React Frontend Dashboard                      │
-│            (Deployed on Vercel - Vite SPA)                  │
+│                 React Frontend Dashboard                    │
+│              (Vite SPA - Deployed on Vercel)                │
 └──────────────────────────────┬──────────────────────────────┘
                                │ HTTPS REST API Requests (VITE_API_URL)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                 Node.js Express API Gateway                 │
-│             (Deployed on Render - Node.js Server)           │
+│                Node.js / Express API Gateway                │
+│             (JWT Auth & Middleware - Deployed on Render)    │
 └───────────────┬─────────────────────────────┬───────────────┘
                 │                             │
     HTTPS Proxy │ (ML_SERVICE_URL)            │ Mongoose ODM (MONGODB_URI)
                 ▼                             ▼
 ┌───────────────────────────────┐ ┌───────────────────────────┐
-│     Python ML Service         │ │      MongoDB Atlas        │
-│ (Deployed on Render - Flask)  │ │   (Cloud NoSQL Database)  │
+│     Python ML Microservice    │ │      MongoDB Atlas        │
+│  (Flask Server - Render)      │ │   (Cloud NoSQL Database)  │
 └───────────────────────────────┘ └───────────────────────────┘
 ```
 
+### Why Decouple the Python ML Service from the Node.js Backend?
+
+1. **Ecosystem Optimization**: Python provides superior libraries for numerical computing, matrix transformations, and machine learning (`scikit-learn`, `xgboost`, `pandas`), whereas Node.js excels at asynchronous I/O, user authentication, and REST API routing.
+2. **Independent Scaling**: Inference microservices are compute-heavy and CPU-bound, whereas API gateways are memory and network I/O-bound. Decoupling allows independent horizontal scaling of the ML service without overloading web API processes.
+3. **Model Versioning & Deployment**: ML models can be retrained, versioned, or swapped independently without modifying web application code or restarting core Express backend services.
+
 ---
 
-## 🛠️ Tech Stack
+## 5. Technology Stack
 
 | Layer | Technologies Used |
 | :--- | :--- |
 | **Machine Learning** | Python 3, XGBoost Classifier, scikit-learn, Pandas, NumPy, joblib |
-| **ML Inference Service** | Python 3, Flask, Gunicorn WSGI Server |
-| **Backend API Gateway** | Node.js, Express.js, Axios, Mongoose ODM, dotenv, CORS |
-| **Database** | MongoDB Atlas (Cloud) / `mongodb-memory-server` (Local Fallback) |
-| **Frontend Dashboard** | React 18, Vite, Tailwind CSS, Recharts, Lucide Icons |
+| **ML Microservice** | Python 3, Flask, Flask-CORS, Gunicorn WSGI |
+| **Backend Gateway** | Node.js, Express.js, Axios, Mongoose ODM, jsonwebtoken, bcryptjs, CORS |
+| **Database** | MongoDB Atlas (Cloud NoSQL Database) |
+| **Frontend UI** | React 18, Vite, Tailwind CSS, Recharts, Lucide Icons, React Router |
 
 ---
 
-## 🤖 Machine Learning Methodology
+## 6. Machine Learning Approach
 
-- **Experimentation Source**: Derived from [`Credit_Card_Fraud_Detection.ipynb`](file:///C:/Users/USER/Downloads/Credit_Card_Fraud_Detection.ipynb).
-- **Dataset**: Kaggle Credit Card Fraud Detection dataset (284,807 transactions).
-- **Class Imbalance Handling**: `XGBClassifier` with `scale_pos_weight = count(normal) / count(fraud)` (~577.28).
-- **Preprocessing Pipeline**: `StandardScaler` fitted on training split for `Time` and `Amount`. PCA features (`V1` through `V28`) remain unscaled.
-- **Classification Threshold**: `0.5`
-- **Model Performance Metrics (Test Set)**:
-  - **ROC-AUC**: `0.9726`
-  - **PR-AUC**: `0.8791`
-  - **Fraud Precision**: `0.8710`
-  - **Fraud Recall**: `0.8265`
-  - **Fraud F1-Score**: `0.8482`
+- **Class Imbalance Strategy**: The dataset exhibits extreme positive class imbalance (0.172% fraud). Standard accuracy models fail by predicting 99.83% majority class. `XGBClassifier` was configured with positive weight tuning (`scale_pos_weight = count(negative) / count(positive) ≈ 577.28`) to penalize false negatives heavily.
+- **Preprocessing Pipeline**: `StandardScaler` fitted on the training split scales `Time` and `Amount`. The 28 PCA-transformed features (`V1` through `V28`) are passed unscaled as provided in the dataset.
+- **Decision Threshold**: `0.5` decision threshold maps prediction probabilities to class labels.
 
 ---
 
-## 📡 API Contract Reference
+## 7. Dataset Overview
 
-### Express Backend Endpoints (`/api`)
+- **Source**: Kaggle Credit Card Fraud Detection Dataset (European cardholder transactions).
+- **Total Samples**: 284,807 transactions.
+- **Class Breakdown**:
+  - **Legitimate (Class 0)**: 284,315 transactions (99.828%)
+  - **Fraudulent (Class 1)**: 492 transactions (0.172%)
+- **Feature Structure**:
+  - `Time`: Seconds elapsed between each transaction and the first transaction in the dataset.
+  - `Amount`: Transaction monetary amount.
+  - `V1`–`V28`: Principal components obtained with PCA transformation due to confidentiality constraints.
 
-| Method | Endpoint | Description |
+---
+
+## 8. Model & Inference Specifications
+
+- **Classifier**: `xgboost.XGBClassifier`
+- **Feature Count**: Exactly 30 numerical inputs in required order: `['Time', 'V1', 'V2', ..., 'V28', 'Amount']`
+- **Scaler Artifact**: `scaler.pkl` (`StandardScaler` object fit on `Time` and `Amount`)
+- **Model Artifact**: `fraud_model.pkl`
+
+---
+
+## 9. Model Evaluation Metrics
+
+In severely imbalanced fraud detection tasks, **raw Accuracy is misleading** (a naive model predicting all normal transactions achieves 99.83% accuracy while missing 100% of fraud). The model was evaluated using precision, recall, and area-under-curve metrics:
+
+| Metric | Score | Explanation |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Health probe & Python ML service connectivity check |
-| `POST` | `/api/predictions` | Submit transaction features for ML inference & MongoDB storage |
-| `GET` | `/api/predictions` | Fetch recent prediction history (`?limit=20`) |
-| `GET` | `/api/predictions/stats` | Aggregated dashboard statistics from MongoDB |
+| **ROC-AUC** | `0.9726` | Area under the Receiver Operating Characteristic curve |
+| **PR-AUC** | `0.8791` | Precision-Recall Area Under Curve (primary metric for imbalanced data) |
+| **Precision (Fraud)** | `0.8710` | Percentage of flagged transactions that were truly fraudulent |
+| **Recall (Fraud)** | `0.8265` | Percentage of actual fraudulent transactions successfully captured |
+| **F1-Score (Fraud)** | `0.8482` | Harmonic mean of precision and recall |
 
-#### Sample Prediction Payload (`POST /api/predictions`)
-```json
+---
+
+## 10. Authentication & Security Architecture
+
+- **Password Hashing**: Passwords hashed using `bcryptjs` with salt rounds prior to persistence.
+- **JWT Verification**: Tokens signed with `JWT_SECRET` (`7d` validity) and validated server-side by `server/src/middleware/auth.js`.
+- **Tenant Data Isolation**: Express controllers extract `req.user.id` strictly from the decoded JWT token. Client-provided user IDs are ignored, ensuring User A cannot query or view User B's predictions or statistics.
+- **Sanitized Errors**: Error responses return user-safe messages without exposing raw Python tracebacks, database URIs, or stack traces.
+
+---
+
+## 11. End-to-End Prediction Flow
+
+```
+1. User enters 30 transaction parameters in React PredictionForm.jsx.
+2. React sends POST /api/predictions with JWT Bearer header to Express API Gateway.
+3. Express auth middleware validates JWT token and attaches req.user.id.
+4. Express mlService.predictFraud() proxies the 30 feature vector to Python Flask service (POST /predict).
+5. Python Flask extracts features in exact order: ['Time', 'V1'..'V28', 'Amount'].
+6. Python Flask applies scaler.pkl to Time & Amount and passes all 30 features to fraud_model.pkl.
+7. Python Flask returns { prediction: 0|1, fraud_probability: float, is_fraud: bool }.
+8. Express saves the prediction in MongoDB Atlas linked to userId: req.user.id.
+9. Express returns prediction result JSON to React for display.
+```
+
+---
+
+## 12. Database Schema (MongoDB Atlas)
+
+### **User Collection (`users`)**
+```js
 {
-  "Time": 406.0, "V1": -2.312226, "V2": 1.951992, "V3": -1.609850,
-  "V4": 3.997905, "V5": -0.522187, "V6": -1.426545, "V7": -2.537387,
-  "V8": 1.391657, "V9": -2.770089, "V10": -2.772272, "V11": 3.202033,
-  "V12": -2.899907, "V13": -0.595221, "V14": -4.289253, "V15": 0.389724,
-  "V16": -1.140747, "V17": -2.830055, "V18": -0.016822, "V19": 0.416955,
-  "V20": 0.126910, "V21": 0.517237, "V22": -0.035049, "V23": -0.465211,
-  "V24": 0.320198, "V25": 0.044519, "V26": 0.177839, "V27": 0.261145,
-  "V28": -0.143275, "Amount": 0.0
+  _id: ObjectId,
+  name: String,
+  email: String, // Unique index, lowercase
+  password: String, // Hashed via bcryptjs
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
-#### Sample Prediction Response (`201 Created`)
-```json
+### **Prediction Collection (`predictions`)**
+```js
 {
-  "success": true,
-  "prediction": 1,
-  "fraud_probability": 0.999601,
-  "is_fraud": true,
-  "_id": "68cf10f3c559ca96377bd136",
-  "createdAt": "2026-09-20T08:59:23.705Z"
+  _id: ObjectId,
+  userId: ObjectId, // Indexed reference to users collection
+  transactionData: { Time, V1...V28, Amount },
+  prediction: Number, // 0 (Legitimate) or 1 (Fraud)
+  fraudProbability: Number, // Range 0.0 to 1.0
+  isFraud: Boolean,
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
 ---
 
-## ⚙️ Environment Variables Reference
+## 13. API Endpoint Reference
 
-### 1. Python ML Service (`ml-service/`)
+### **Authentication API (`/api/auth`)**
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register new user, hash password, return JWT |
+| `POST` | `/api/auth/login` | Public | Authenticate user credentials, return JWT |
+| `GET` | `/api/auth/me` | JWT | Get current authenticated user profile |
+| `POST` | `/api/auth/logout` | Public | Invalidate client session token |
+
+### **Prediction API (`/api/predictions`)**
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/predictions` | JWT | Submit 30 features for inference & MongoDB save |
+| `GET` | `/api/predictions` | JWT | Get user-isolated prediction history (`?limit=20&page=1`) |
+| `GET` | `/api/predictions/stats` | JWT | Get user-isolated aggregated statistics |
+| `GET` | `/api/health` | Public | Backend health probe & Python ML connection status |
+
+---
+
+## 14. Environment Variables Reference
+
+### **Express Backend (`server/.env`)**
+```env
+PORT=8000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>
+ML_SERVICE_URL=https://credit-card-fraud-detection-kdkf.onrender.com
+JWT_SECRET=super_secret_jwt_key_credit_card_fraud_2026
+CLIENT_URL=https://<your-vercel-app>.vercel.app
+```
+
+### **React Frontend (`client/.env`)**
+```env
+VITE_API_URL=https://credit-card-fraud-backend-rx3j.onrender.com
+```
+
+### **Python ML Microservice (`ml-service/`)**
 ```env
 PORT=5000
 ```
 
-### 2. Node.js Express Backend (`server/.env`)
-```env
-PORT=8000
-MONGODB_URI=mongodb://127.0.0.1:27017/credit_card_fraud
-ML_SERVICE_URL=http://127.0.0.1:5000
-CLIENT_URL=http://localhost:5173
-```
-
-### 3. React Frontend (`client/.env`)
-```env
-VITE_API_URL=http://127.0.0.1:8000
-```
-
 ---
 
-## 🚀 Local Setup & Development
+## 15. Local Setup & Development
 
 ```bash
-# 1. Start Python ML Service (Port 5000)
+# 1. Clone Repository
+git clone https://github.com/santhoshreddynarra/credit-card-fraud-detection.git
+cd credit-card-fraud-detection
+
+# 2. Run Python ML Service (Port 5000)
 cd ml-service
 pip install -r requirements.txt
 python app.py
 
-# 2. Start Express Backend (Port 8000)
-cd server
+# 3. Run Express Backend Gateway (Port 8000)
+cd ../server
 npm install
 npm start
 
-# 3. Start React Frontend Dashboard (Port 5173)
-cd client
+# 4. Run React Frontend Dashboard (Port 5173)
+cd ../client
 npm install
 npm run dev
 ```
 
 ---
 
-## 🌐 Production Deployment Guide
+## 16. Production Deployment Overview
 
-### Service 1: Database (MongoDB Atlas)
-1. Sign in to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-2. Create a free **M0 Cluster**.
-3. Under **Database Access**, create a database user and password.
-4. Under **Network Access**, add IP Access List entry `0.0.0.0/0` (Allow Access from Anywhere).
-5. Copy the connection string (`mongodb+srv://<username>:<password>@cluster.mongodb.net/credit_card_fraud`).
+- **Frontend**: Deployed on **Vercel** (`client/` root directory, Vite framework preset).
+- **Backend API Gateway**: Deployed on **Render** as a Node.js Web Service (`server/` root directory).
+- **Python ML Microservice**: Deployed on **Render** as a Python 3 Web Service (`ml-service/` root directory).
+- **Database**: **MongoDB Atlas** Cloud M0 Cluster.
 
 ---
 
-### Service 2: Python ML Service (Render)
-1. Log into [Render](https://render.com) and click **New +** -> **Web Service**.
-2. Connect your GitHub repository: `credit-card-fraud-detection`.
-3. Configure settings:
-   - **Name**: `credit-card-fraud-ml`
-   - **Root Directory**: `ml-service`
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn app:app`
-4. Copy the deployed service URL (e.g. `https://credit-card-fraud-ml.onrender.com`).
+## 17. Application Screenshots
+
+*(Screenshots of the Landing Page, Auth Views, Dashboard Analytics, Transaction Input Form, Prediction Result Card, and History Log Modal will be showcased here).*
 
 ---
 
-### Service 3: Express Backend Gateway (Render)
-1. Click **New +** -> **Web Service** on Render.
-2. Select your repository: `credit-card-fraud-detection`.
-3. Configure settings:
-   - **Name**: `credit-card-fraud-backend`
-   - **Root Directory**: `server`
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-4. Environment Variables:
-   - `MONGODB_URI`: `<Your MongoDB Atlas Connection String>`
-   - `ML_SERVICE_URL`: `https://credit-card-fraud-ml.onrender.com`
-   - `CLIENT_URL`: `https://credit-card-fraud-detection.vercel.app`
-5. Copy the deployed backend URL (e.g. `https://credit-card-fraud-backend.onrender.com`).
+## 18. Future Improvements
 
----
-
-### Service 4: React Frontend Dashboard (Vercel)
-1. Log into [Vercel](https://vercel.com) and click **Add New Project**.
-2. Import your GitHub repository: `credit-card-fraud-detection`.
-3. Configure settings:
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `client`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Environment Variables:
-   - `VITE_API_URL`: `https://credit-card-fraud-backend.onrender.com`
-5. Click **Deploy**.
-
----
-
-## 🖼️ Application Screenshots
-
-*(Screenshots of the live React Dashboard, Statistics Cards, Risk Evaluation Banner, Recharts Analytics, and History Log can be added here).*
-
----
-
-## 🔮 Future Improvements
-
-- **SHAP / LIME Explainability**: Visualizing feature contribution scores for each prediction.
-- **Model Monitoring & Concept Drift**: Tracking input distributions over time.
-- **Threshold Tuning Control**: Allowing fraud analysts to adjust the decision threshold via the UI.
+- **SHAP / LIME Explainability**: Visualizing individual feature contribution scores for each prediction.
+- **Model Monitoring & Concept Drift**: Tracking feature input distribution shifts over time.
+- **Configurable Decision Threshold**: Allowing risk analysts to tune the threshold slider dynamically in the UI.
