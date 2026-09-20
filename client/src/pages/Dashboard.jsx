@@ -25,11 +25,11 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     setFetchError(null);
     try {
-      // 1. Health check
+      // 1. System Health Check
       const healthData = await getHealth().catch(() => ({ status: 'error', ml_service: 'disconnected' }));
       setHealth(healthData);
 
-      // 2. Statistics
+      // 2. Fetch Aggregate Stats
       setLoadingStats(true);
       const statsRes = await getStats();
       if (statsRes.success) {
@@ -37,7 +37,7 @@ const Dashboard = () => {
       }
       setLoadingStats(false);
 
-      // 3. History
+      // 3. Fetch Prediction Log History
       setLoadingHistory(true);
       const historyRes = await getPredictions(20);
       if (historyRes.success) {
@@ -57,7 +57,7 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  // Handle transaction prediction submission
+  // Handle transaction risk analysis submit
   const handlePredict = async (transactionData) => {
     setLoadingPredict(true);
     setPredictError(null);
@@ -66,13 +66,13 @@ const Dashboard = () => {
       const response = await createPrediction(transactionData);
       if (response.success) {
         setCurrentResult(response);
-        // Refresh stats and history log
+        // Refresh dashboard metrics & history
         loadDashboardData();
       } else {
         setPredictError(response.message || 'Prediction execution failed.');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Backend is currently unavailable.';
+      const msg = err.response?.data?.message || err.message || 'Backend service is currently unavailable.';
       setPredictError(msg);
     } finally {
       setLoadingPredict(false);
@@ -80,21 +80,21 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans">
       <Navbar health={health} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {/* Global Fetch Error Banner */}
+        {/* Connection Failure Warning Banner */}
         {fetchError && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-amber-300 flex items-center justify-between text-xs">
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-3.5 text-amber-300 flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>{fetchError}. Ensure Express backend (port 8000) & Python service (port 5000) are running.</span>
+              <span>{fetchError} Verify Express Server (Port 8000) and Python ML Engine (Port 5000).</span>
             </div>
             <button
               onClick={loadDashboardData}
-              className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 rounded-md transition-all flex items-center gap-1 font-medium"
+              className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 rounded transition-colors flex items-center gap-1 font-medium"
             >
               <RefreshCw className="w-3 h-3" />
               Retry
@@ -102,11 +102,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Top Summary Statistics Cards */}
-        <StatsCards stats={stats} loading={loadingStats} error={fetchError} />
-
-        {/* Prediction Input Form & Result Side-by-Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* PRIMARY FOCUS AREA: Transaction Risk Evaluation & Live Result Banner */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7">
             <PredictionForm onSubmit={handlePredict} loading={loadingPredict} />
           </div>
@@ -115,17 +112,19 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Visual Charts */}
+        {/* SECONDARY AREA: Statistics Metrics Summary */}
+        <StatsCards stats={stats} loading={loadingStats} />
+
+        {/* Analytics Charts */}
         <FraudChart stats={stats} loading={loadingStats} />
 
-        {/* Prediction History Log */}
+        {/* Historical Prediction Audit Log */}
         <PredictionHistory predictions={predictions} loading={loadingHistory} error={fetchError} />
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-600">
-        Credit Card Fraud Detection Dashboard &bull; React + Express + Python XGBoost ML
+      <footer className="border-t border-gray-900 bg-gray-950 py-4 text-center text-xs text-gray-500">
+        FraudShield Risk Platform &bull; Python XGBoost ML + Express Gateway + React Dashboard
       </footer>
     </div>
   );

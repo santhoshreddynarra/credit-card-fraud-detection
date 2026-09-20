@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, RotateCcw, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 
 const NORMAL_PRESET = {
   Time: 0.0, V1: -1.359807, V2: -0.072781, V3: 2.536346, V4: 1.378155,
@@ -45,7 +45,6 @@ const PredictionForm = ({ onSubmit, loading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Convert all inputs to numbers
     const numericData = {};
     for (const key in formData) {
       numericData[key] = parseFloat(formData[key]) || 0;
@@ -54,99 +53,115 @@ const PredictionForm = ({ onSubmit, loading }) => {
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+    <div className="bg-gray-900 border border-gray-800 rounded-lg p-5 sm:p-6 shadow-sm">
+      {/* Header & Presets */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-gray-800">
         <div>
-          <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            Transaction Risk Evaluator
-          </h3>
-          <p className="text-xs text-slate-400">Enter transaction features or load test presets</p>
+          <h2 className="text-base font-bold text-white tracking-tight">
+            Evaluate Transaction
+          </h2>
+          <p className="text-xs text-gray-400">
+            Enter transaction parameters or load pre-validated dataset samples
+          </p>
         </div>
 
-        {/* Quick Presets */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={() => handlePreset(NORMAL_PRESET)}
-            className="px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/20 transition-all flex items-center gap-1.5"
+            className="px-2.5 py-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded hover:bg-emerald-500/20 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Normal Preset
+            Legitimate Sample
           </button>
           <button
             type="button"
             onClick={() => handlePreset(FRAUD_PRESET)}
-            className="px-3 py-1.5 text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-lg hover:bg-rose-500/20 transition-all flex items-center gap-1.5"
+            className="px-2.5 py-1 text-xs font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded hover:bg-rose-500/20 transition-colors"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Fraud Preset
+            Fraudulent Sample
           </button>
           <button
             type="button"
             onClick={() => handlePreset(DEFAULT_FORM)}
-            className="p-1.5 text-xs text-slate-400 hover:text-white bg-slate-800 rounded-lg hover:bg-slate-700 transition-all"
-            title="Reset form"
+            className="p-1 text-gray-400 hover:text-white bg-gray-800 rounded border border-gray-700 hover:bg-gray-700 transition-colors"
+            title="Reset Form"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Primary Features (Time & Amount) */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Primary Features: Amount & Time */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Transaction Time (Seconds)
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              Transaction Amount ($)
             </label>
-            <input
-              type="number"
-              step="any"
-              name="Time"
-              value={formData.Time}
-              onChange={handleChange}
-              required
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-all"
-              placeholder="e.g. 406.0"
-            />
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-sm font-medium">
+                $
+              </span>
+              <input
+                type="number"
+                step="any"
+                name="Amount"
+                value={formData.Amount}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-950 border border-gray-800 rounded-md pl-7 pr-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                placeholder="0.00"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Transaction Amount ($)
+            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+              Elapsed Time (Seconds)
             </label>
-            <input
-              type="number"
-              step="any"
-              name="Amount"
-              value={formData.Amount}
-              onChange={handleChange}
-              required
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500 transition-all"
-              placeholder="e.g. 149.62"
-            />
+            <div className="relative">
+              <input
+                type="number"
+                step="any"
+                name="Time"
+                value={formData.Time}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-950 border border-gray-800 rounded-md px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                placeholder="0.0"
+              />
+              <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 text-xs font-mono">
+                sec
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* PCA Features Toggle */}
-        <div className="pt-2">
+        {/* PCA Features Toggle Button */}
+        <div className="pt-1">
           <button
             type="button"
             onClick={() => setShowPca(!showPca)}
-            className="text-xs font-medium text-sky-400 hover:text-sky-300 flex items-center gap-1 focus:outline-none"
+            className="w-full flex items-center justify-between px-3 py-2 bg-gray-950 border border-gray-800 rounded-md text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-800/60 transition-all"
           >
-            {showPca ? '▼ Hide PCA Features (V1 - V28)' : '▶ Show / Edit PCA Features (V1 - V28)'}
+            <div className="flex items-center space-x-2">
+              <Layers className="w-3.5 h-3.5 text-blue-400" />
+              <span>Anonymized PCA Features (V1 – V28)</span>
+            </div>
+            {showPca ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
           </button>
         </div>
 
-        {/* PCA Feature Grid (V1 through V28) */}
+        {/* Collapsible PCA Features Matrix */}
         {showPca && (
-          <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-3">
-            <p className="text-xs text-slate-400">PCA Transformed Transaction Features (V1 to V28):</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 max-h-72 overflow-y-auto pr-1">
+          <div className="p-3.5 bg-gray-950 border border-gray-800 rounded-md">
+            <p className="text-[11px] text-gray-400 mb-3">
+              Principal Component Analysis (PCA) features automatically extracted from transaction vectors:
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 max-h-60 overflow-y-auto pr-1">
               {Array.from({ length: 28 }, (_, i) => `V${i + 1}`).map((vKey) => (
                 <div key={vKey}>
-                  <label className="block text-[10px] font-mono text-slate-400 uppercase mb-0.5">
+                  <label className="block text-[10px] font-mono text-gray-400 uppercase mb-0.5">
                     {vKey}
                   </label>
                   <input
@@ -155,7 +170,7 @@ const PredictionForm = ({ onSubmit, loading }) => {
                     name={vKey}
                     value={formData[vKey] !== undefined ? formData[vKey] : 0}
                     onChange={handleChange}
-                    className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
+                    className="w-full bg-gray-900 border border-gray-800 rounded px-2 py-1 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               ))}
@@ -163,22 +178,22 @@ const PredictionForm = ({ onSubmit, loading }) => {
           </div>
         )}
 
-        {/* Submit Button */}
-        <div className="pt-2">
+        {/* Action Button */}
+        <div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-sky-600 hover:bg-sky-500 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-all flex items-center justify-center space-x-2 shadow-lg shadow-sky-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm py-2.5 px-4 rounded-md transition-colors flex items-center justify-center space-x-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Running XGBoost Model Inference...</span>
+                <span>Analyzing Risk via XGBoost Model...</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current" />
-                <span>Check Transaction</span>
+                <span>Analyze Transaction</span>
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
