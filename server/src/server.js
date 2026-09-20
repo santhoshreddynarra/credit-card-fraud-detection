@@ -14,8 +14,15 @@ const PORT = process.env.PORT || 8000;
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors());
+// CORS Middleware Configuration
+const clientUrl = process.env.CLIENT_URL;
+const corsOptions = {
+  origin: clientUrl
+    ? [clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173']
+    : '*',
+  credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health Check Endpoint
@@ -35,7 +42,7 @@ app.use(errorHandler);
 
 // Start Express Server
 const server = app.listen(PORT, () => {
-  console.log(`[Express] Server running on http://127.0.0.1:${PORT}`);
+  console.log(`[Express] Server running on port: ${PORT}`);
   console.log(`[Express] Connected to Python ML Service at: ${process.env.ML_SERVICE_URL || 'http://127.0.0.1:5000'}`);
 });
 
