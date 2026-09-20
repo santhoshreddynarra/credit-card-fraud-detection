@@ -6,6 +6,11 @@ const predictionRoutes = require('./routes/predictionRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const { checkMlHealth } = require('./services/mlService');
 
+const dns = require("dns");
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
+
+
+
 dotenv.config();
 
 const app = express();
