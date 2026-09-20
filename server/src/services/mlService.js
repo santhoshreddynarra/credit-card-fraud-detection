@@ -30,7 +30,7 @@ const predictFraud = async (transactionData) => {
     } else if (error.request) {
       // Python API was unreachable or timed out
       const err = new Error('ML prediction service is currently unavailable or un-reachable.');
-      err.statusCode = 530;
+      err.statusCode = 503;
       throw err;
     } else {
       const err = new Error(`ML service request error: ${error.message}`);
