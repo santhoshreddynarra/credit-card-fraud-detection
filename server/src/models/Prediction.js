@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 
 const predictionSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
     transactionData: {
       Time: { type: Number, required: true },
       V1: { type: Number, required: true },

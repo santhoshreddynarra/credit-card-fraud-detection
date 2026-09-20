@@ -6,9 +6,13 @@ import PredictionResult from '../components/PredictionResult';
 import PredictionHistory from '../components/PredictionHistory';
 import FraudChart from '../components/FraudChart';
 import { getStats, getPredictions, createPrediction, getHealth } from '../services/api';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { RefreshCw, AlertCircle, ArrowRight, PlayCircle, ShieldCheck } from 'lucide-react';
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('overview');
+
   const [health, setHealth] = useState(null);
   const [stats, setStats] = useState(null);
   const [predictions, setPredictions] = useState([]);
@@ -21,15 +25,15 @@ const Dashboard = () => {
   const [predictError, setPredictError] = useState(null);
   const [fetchError, setFetchError] = useState(null);
 
-  // Fetch initial dashboard data
+  // Fetch initial dashboard data for authenticated user
   const loadDashboardData = async () => {
     setFetchError(null);
     try {
-      // 1. System Health Check
+      // 1. Health check probe
       const healthData = await getHealth().catch(() => ({ status: 'error', ml_service: 'disconnected' }));
       setHealth(healthData);
 
-      // 2. Fetch Aggregate Stats
+      // 2. User-isolated statistics
       setLoadingStats(true);
       const statsRes = await getStats();
       if (statsRes.success) {
@@ -37,7 +41,7 @@ const Dashboard = () => {
       }
       setLoadingStats(false);
 
-      // 3. Fetch Prediction Log History
+      // 3. User-isolated history log
       setLoadingHistory(true);
       const historyRes = await getPredictions(20);
       if (historyRes.success) {
@@ -46,8 +50,8 @@ const Dashboard = () => {
       setLoadingHistory(false);
 
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setFetchError(err.message || 'Failed to connect to backend service.');
+      console.error('Error loading user dashboard data:', err);
+      setFetchError(err.message || 'Failed to communicate with API Gateway.');
       setLoadingStats(false);
       setLoadingHistory(false);
     }
@@ -57,7 +61,7 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
-  // Handle transaction risk analysis submit
+  // Handle transaction prediction submit
   const handlePredict = async (transactionData) => {
     setLoadingPredict(true);
     setPredictError(null);
@@ -66,7 +70,7 @@ const Dashboard = () => {
       const response = await createPrediction(transactionData);
       if (response.success) {
         setCurrentResult(response);
-        // Refresh dashboard metrics & history
+        // Refresh user's dashboard statistics and history log
         loadDashboardData();
       } else {
         setPredictError(response.message || 'Prediction execution failed.');
@@ -81,16 +85,16 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 flex flex-col font-sans">
-      <Navbar health={health} />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        {/* Connection Failure Warning Banner */}
+        {/* Error Banner */}
         {fetchError && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-3.5 text-amber-300 flex items-center justify-between text-xs">
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-md p-3 text-amber-300 flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>{fetchError} Verify Express Server (Port 8000) and Python ML Engine (Port 5000).</span>
+              <span>{fetchError} Ensure Express Gateway (Port 8000) & Python ML Service (Port 5000) are active.</span>
             </div>
             <button
               onClick={loadDashboardData}
@@ -102,29 +106,80 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* PRIMARY FOCUS AREA: Transaction Risk Evaluation & Live Result Banner */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7">
-            <PredictionForm onSubmit={handlePredict} loading={loadingPredict} />
+        {/* User Greeting & Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-gray-900">
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">
+              Welcome back, {user?.name || 'Security Analyst'}
+            </h1>
+            <p className="text-xs text-gray-400">
+              Monitor transaction risk scoring and analyze fraud probabilities in real time.
+            </p>
           </div>
-          <div className="lg:col-span-5 space-y-6">
-            <PredictionResult result={currentResult} loading={loadingPredict} error={predictError} />
-          </div>
+
+          {activeTab !== 'analyze' && (
+            <button
+              onClick={() => setActiveTab('analyze')}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs py-2 px-3.5 rounded-md transition-colors flex items-center space-x-1.5 self-start sm:self-auto shadow-sm"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              <span>Analyze New Transaction</span>
+            </button>
+          )}
         </div>
 
-        {/* SECONDARY AREA: Statistics Metrics Summary */}
-        <StatsCards stats={stats} loading={loadingStats} />
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Top 4 Summary Cards */}
+            <StatsCards stats={stats} loading={loadingStats} />
 
-        {/* Analytics Charts */}
-        <FraudChart stats={stats} loading={loadingStats} />
+            {/* Visual Recharts Analytics */}
+            <FraudChart stats={stats} loading={loadingStats} />
 
-        {/* Historical Prediction Audit Log */}
-        <PredictionHistory predictions={predictions} loading={loadingHistory} error={fetchError} />
+            {/* Recent Activity Table (Last 5 Predictions) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  Recent Transaction Activity
+                </h3>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  <span>View Full Log</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <PredictionHistory predictions={predictions.slice(0, 5)} loading={loadingHistory} error={fetchError} />
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: ANALYZE TRANSACTION */}
+        {activeTab === 'analyze' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-7">
+              <PredictionForm onSubmit={handlePredict} loading={loadingPredict} />
+            </div>
+            <div className="lg:col-span-5 space-y-6">
+              <PredictionResult result={currentResult} loading={loadingPredict} error={predictError} />
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: PREDICTION HISTORY LOG */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            <PredictionHistory predictions={predictions} loading={loadingHistory} error={fetchError} />
+          </div>
+        )}
 
       </main>
 
       <footer className="border-t border-gray-900 bg-gray-950 py-4 text-center text-xs text-gray-500">
-        FraudShield Risk Platform &bull; Python XGBoost ML + Express Gateway + React Dashboard
+        FraudShield Security Platform &bull; User Session: {user?.email} &bull; Protected by JWT Authentication
       </footer>
     </div>
   );

@@ -1,15 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Configure fallback DNS servers for reliable MongoDB SRV lookup
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 const { connectDB } = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
 const predictionRoutes = require('./routes/predictionRoutes');
+const auth = require('./middleware/auth');
 const errorHandler = require('./middleware/errorHandler');
 const { checkMlHealth } = require('./services/mlService');
-
-const dns = require("dns");
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
-
-
 
 dotenv.config();
 
@@ -30,7 +32,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Health Check Endpoint
+// Public Health Check Endpoint
 app.get('/api/health', async (req, res) => {
   const mlHealth = await checkMlHealth();
   res.status(200).json({
@@ -39,8 +41,11 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/predictions', predictionRoutes);
+// Authentication API Routes (Public)
+app.use('/api/auth', authRoutes);
+
+// Prediction API Routes (Protected via JWT Auth)
+app.use('/api/predictions', auth, predictionRoutes);
 
 // Centralized Error Handling Middleware
 app.use(errorHandler);
